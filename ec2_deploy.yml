@@ -1,0 +1,76 @@
+- name: Deploy to EC2
+  hosts: localhost
+  connection: local
+
+  tasks:
+    - name: Launch EC2 Instance
+      ec2_instance:
+        instance_type: t2.medium
+        image_id: ami-0230bd60aa48260c6
+        region: us-east-1
+        key_name: devops_vse
+        vpc_subnet_id: subnet-06ed75bba79b8ee4f
+        network:
+          assign_public_ip: yes
+        wait: yes
+        count: 1
+
+        security_group: eshop
+        aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
+        aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
+        security_token: ${{ secrets.AWS_SESSION_TOKEN }}
+      register: ec2_instance_result
+
+    - name: Add instance host to group
+      add_host:
+        hostname: "{{ item.public_ip_address }}"
+        groupname: launched
+      loop: "{{ ec2_instance_result.instances }}"
+
+    - name: Wait for ssh connection
+      delegate_to: "{{ item.public_dns_name }}"
+      wait_for_connection:
+        delay: 30
+        timeout: 300
+      loop: "{{ ec2_instance_result.instances }}"
+
+- name: Configure EC2
+  hosts: launched
+  connection: ssh
+
+  tasks:
+    - name: Install Git and Docker
+      yum:
+        name:
+          - docker
+          - git
+        state: latest
+        update_cache: yes
+      become: yes
+    - service:
+        name: docker
+        state: started
+        enabled: yes
+      become: yes
+    - name: Start Docker on startup
+      shell: systemctl enable docker
+      become: yes
+    - name: Set right to Docker
+      shell: usermod -a -G docker ec2-user
+      become: yes
+    - name: Get eshop from Git
+      git:
+        repo: 'https://github.com/Razvie-arr/4IT572_docker'
+        dest: ./app
+    - name: Build Docker with eshop
+      shell: cd app && docker build -t myeshop:latest .
+      become: yes
+    - name: Run Docker with eshop
+      shell: docker run -p 80:3000 myeshop
+      async: 45
+      poll: 0
+      become: yes
+    - wait_for:
+        port:
+          80
+
