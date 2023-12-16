@@ -117,9 +117,7 @@ jobs:
           echo $'access_key: ${{ secrets.AWS_ACCESS_KEY }}\nsecret_key: ${{ secrets.AWS_SECRET_KEY }}\nsession_token: ${{ secrets.AWS_SESSION_TOKEN }}' > group_vars/all/aws.yaml
           ansible-vault encrypt group_vars/all/aws.yaml --vault-password-file=<(echo "${{ secrets.VAULT_PASSWORD }}")
 
-      - name: Deploy to AWS EC2 using Ansible Playbook
-        uses: dawidd6/action-ansible-playbook@v2
-        with:
-          playbook: ec2_deploy.yml
-          key: ${{ secrets.PRIVATE_KEY }}
-          vault_password: ${{ secrets.VAULT_PASSWORD }}
+      - name: Deploy to AWS
+        run: |
+          echo "${{ secrets.PRIVATE_KEY }}" > devops_vse.pem
+          ansible-playbook ec2_deploy.yml --vault-password-file=<(echo "${{ secrets.VAULT_PASSWORD }}") --user ec2-user --key-file devops_vse.pem
