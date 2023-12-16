@@ -1,4 +1,4 @@
-name: Build and tests eshop workflow
+name: Build, tests and deploy to EC2 eshop workflow
 
 on:
   workflow_dispatch:
@@ -94,7 +94,6 @@ jobs:
 
   Deploy:
     needs: [Build, Test]
-    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -103,17 +102,20 @@ jobs:
         with:
           token: ${{ secrets.WORKFLOW_TOKEN }}
 
-      - name: Load Node modules and build folder
-        uses: actions/cache@v3.3.2
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          path: |
-            ~/.npm
-            ./node_modules
-            ./build
-          key: ${{ runner.os }}-build-${{ github.run_id }}
+          python-version: '3.10'
+
+      - name: Setup Ansible
+        run: |
+          pip3 install ansible boto boto3
 
       - name: Deploy to AWS EC2 using Ansible Playbook
         uses: dawidd6/action-ansible-playbook@v2
         with:
           playbook: ec2_deploy.yml
           key: ${{ secrets.PRIVATE_KEY }}
+          options:
+            --extra-vars access_key=${{ secrets.AWS_ACCESS_KEY }} secret_key=${{ secrets.AWS_SECRET_KEY }} session_token=${{ secrets.AWS_SESSION_KEY }}
+
