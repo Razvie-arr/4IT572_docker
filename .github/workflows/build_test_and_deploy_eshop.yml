@@ -107,20 +107,25 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Setup Ansible
+      - name: Setup Ansible and Boto
         run: |
           pip3 install ansible boto boto3
-          sudo mkdir /etc/ansible
-          echo $'[defaults]\nhost_key_checking = False' | sudo tee /etc/ansible/ansible.cfg
 
       - name: Setup Ansible-Vault
         run: |
           mkdir group_vars group_vars/all
-          echo $'access_key: ${{ secrets.AWS_ACCESS_KEY }}\nsecret_key: ${{ secrets.AWS_SECRET_KEY }}\nsession_token: ${{ secrets.AWS_SESSION_TOKEN }}' > group_vars/all/aws.yaml
+          printf 'access_key: ${{ secrets.AWS_ACCESS_KEY }}\n' >> group_vars/all/aws.yaml
+          printf 'secret_key: ${{ secrets.AWS_SECRET_KEY }}\n' >> group_vars/all/aws.yaml
+          printf 'session_token: ${{ secrets.AWS_SESSION_TOKEN }}' >> group_vars/all/aws.yaml
           ansible-vault encrypt group_vars/all/aws.yaml --vault-password-file=<(echo "${{ secrets.VAULT_PASSWORD }}")
 
-      - name: Deploy to AWS
+      - name: Setup SSH key
         run: |
           echo "${{ secrets.PRIVATE_KEY }}" > devops_vse.pem
           chmod 400 devops_vse.pem
+
+      - name: Deploy to AWS
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: False
+        run: |
           ansible-playbook ec2_deploy.yml --vault-password-file=<(echo "${{ secrets.VAULT_PASSWORD }}") --user ec2-user --key-file devops_vse.pem

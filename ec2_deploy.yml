@@ -58,7 +58,6 @@
     - name: Set right to Docker
       shell: usermod -a -G docker ec2-user
       become: yes
-#get eshop not from git, but from workflow
     - name: Get eshop from Git
       git:
         repo: 'https://github.com/Razvie-arr/4IT572_docker'
