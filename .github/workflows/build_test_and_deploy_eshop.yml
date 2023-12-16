@@ -111,11 +111,14 @@ jobs:
         run: |
           pip3 install ansible boto boto3
 
+      - name: Setup Ansible-Vault
+        run: |
+          echo ${{ secrets.VAULT_PASSWORD }} > vaultPassword
+          echo access_key=${{ secrets.AWS_ACCESS_KEY }} secret_key=${{ secrets.AWS_SECRET_KEY }} session_token=${{ secrets.AWS_SESSION_TOKEN }} > vaultVariables.yaml
+          ansible-vault encrypt vaultVariables.yaml --vault-password-file=vaultPassword
+
       - name: Deploy to AWS EC2 using Ansible Playbook
         uses: dawidd6/action-ansible-playbook@v2
         with:
           playbook: ec2_deploy.yml
           key: ${{ secrets.PRIVATE_KEY }}
-          options:
-            --extra-vars access_key=${{ secrets.AWS_ACCESS_KEY }} secret_key=${{ secrets.AWS_SECRET_KEY }} session_token=${{ secrets.AWS_SESSION_TOKEN }}
-
