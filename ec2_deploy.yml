@@ -3,6 +3,14 @@
   connection: local
 
   tasks:
+    - name: Save list of running instances
+      ec2_instance_info:
+        region: us-east-1
+        aws_access_key: "{{ access_key }}"
+        aws_secret_key: "{{ secret_key }}"
+        security_token: "{{ session_token }}"
+      register: ec2_instances_before
+
     - name: Launch EC2 Instance
       ec2_instance:
         instance_type: t2.medium
@@ -16,9 +24,9 @@
         count: 1
 
         security_group: eshop
-        aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
-        aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
-        security_token: ${{ secrets.AWS_SESSION_TOKEN }}
+        aws_access_key: "{{ access_key }}"
+        aws_secret_key: "{{ secret_key }}"
+        security_token: "{{ session_token }}"
       register: ec2_instance_result
 
     - name: Add instance host to group
@@ -74,3 +82,17 @@
         port:
           80
 
+- name: Terminate previous instances
+  hosts: localhost
+
+  tasks:
+    - name: Terminate instances from before saved list
+      ec2_instance:
+        region: us-east-1
+        state: 'terminated'
+        aws_access_key: "{{ access_key }}"
+        aws_secret_key: "{{ secret_key }}"
+        security_token: "{{ session_token }}"
+        instance_ids: '{{ item.instance_id }}'
+        wait: yes
+      with_items: "{{ ec2_instances_before.instances }}"

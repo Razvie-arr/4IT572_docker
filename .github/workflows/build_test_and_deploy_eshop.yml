@@ -1,4 +1,4 @@
-name: Build and tests eshop workflow
+name: Build, tests and deploy to EC2 eshop workflow
 
 on:
   workflow_dispatch:
@@ -103,18 +103,30 @@ jobs:
         with:
           token: ${{ secrets.WORKFLOW_TOKEN }}
 
-      - name: Load Node modules and build folder
-        uses: actions/cache@v3.3.2
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          path: |
-            ~/.npm
-            ./node_modules
-            ./build
-          key: ${{ runner.os }}-build-${{ github.run_id }}
+          python-version: '3.10'
 
-      - name: Deploy to AWS EC2 using Ansible Playbook
-        uses: dawidd6/action-ansible-playbook@v2
-        with:
-          playbook: ec2_deploy.yml
-          key: ${{ secrets.PRIVATE_KEY }}
+      - name: Setup Ansible and Boto
+        run: |
+          pip3 install ansible boto boto3
 
+      - name: Setup Ansible-Vault
+        run: |
+          mkdir group_vars group_vars/all
+          printf 'access_key: ${{ secrets.AWS_ACCESS_KEY }}\n' >> group_vars/all/aws.yaml
+          printf 'secret_key: ${{ secrets.AWS_SECRET_KEY }}\n' >> group_vars/all/aws.yaml
+          printf 'session_token: ${{ secrets.AWS_SESSION_TOKEN }}' >> group_vars/all/aws.yaml
+          ansible-vault encrypt group_vars/all/aws.yaml --vault-password-file=<(echo "${{ secrets.VAULT_PASSWORD }}")
+
+      - name: Setup SSH key
+        run: |
+          echo "${{ secrets.PRIVATE_KEY }}" > devops_vse.pem
+          chmod 400 devops_vse.pem
+
+      - name: Deploy to AWS
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: False
+        run: |
+          ansible-playbook ec2_deploy.yml --vault-password-file=<(echo "${{ secrets.VAULT_PASSWORD }}") --user ec2-user --key-file devops_vse.pem
