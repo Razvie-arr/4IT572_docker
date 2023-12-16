@@ -117,5 +117,5 @@ jobs:
           playbook: ec2_deploy.yml
           key: ${{ secrets.PRIVATE_KEY }}
           options:
-            --extra-vars access_key=${{ secrets.AWS_ACCESS_KEY }} secret_key=${{ secrets.AWS_SECRET_KEY }} session_token=${{ secrets.AWS_SESSION_KEY }}
+            --extra-vars access_key=${{ secrets.AWS_ACCESS_KEY }} secret_key=${{ secrets.AWS_SECRET_KEY }} session_token=${{ secrets.AWS_SESSION_TOKEN }}
 
