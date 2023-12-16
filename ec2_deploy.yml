@@ -16,9 +16,9 @@
         count: 1
 
         security_group: eshop
-        aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
-        aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
-        security_token: ${{ secrets.AWS_SESSION_TOKEN }}
+        aws_access_key: "{{ access_key }}"
+        aws_secret_key: "{{ secret_key }}"
+        security_token: "{{ session_token }}"
       register: ec2_instance_result
 
     - name: Add instance host to group
@@ -58,6 +58,7 @@
     - name: Set right to Docker
       shell: usermod -a -G docker ec2-user
       become: yes
+#get eshop not from git, but from workflow
     - name: Get eshop from Git
       git:
         repo: 'https://github.com/Razvie-arr/4IT572_docker'
