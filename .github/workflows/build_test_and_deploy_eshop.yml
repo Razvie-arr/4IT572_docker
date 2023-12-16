@@ -113,8 +113,9 @@ jobs:
 
       - name: Setup Ansible-Vault
         run: |
-          echo $'access_key:${{ secrets.AWS_ACCESS_KEY }}\nsecret_key:${{ secrets.AWS_SECRET_KEY }}\nsession_token:${{ secrets.AWS_SESSION_TOKEN }}' > vaultVariables.yaml
-          ansible-vault encrypt vaultVariables.yaml --vault-password-file=<(echo "${{ secrets.VAULT_PASSWORD }}")
+          mkdir group_vars group_vars/all
+          echo $'access_key: ${{ secrets.AWS_ACCESS_KEY }}\nsecret_key: ${{ secrets.AWS_SECRET_KEY }}\nsession_token: ${{ secrets.AWS_SESSION_TOKEN }}' > group_vars/all/aws.yaml
+          ansible-vault encrypt group_vars/all/aws.yaml --vault-password-file=<(echo "${{ secrets.VAULT_PASSWORD }}")
 
       - name: Deploy to AWS EC2 using Ansible Playbook
         uses: dawidd6/action-ansible-playbook@v2
