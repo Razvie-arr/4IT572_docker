@@ -111,7 +111,7 @@ jobs:
         run: |
           pip3 install ansible boto boto3
           sudo mkdir /etc/ansible
-          echo "host_key_checking = False" | sudo tee /etc/ansible/ansible.cfg
+          echo $'[defaults]\nhost_key_checking = False' | sudo tee /etc/ansible/ansible.cfg
 
       - name: Setup Ansible-Vault
         run: |
