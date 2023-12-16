@@ -1,11 +1,3 @@
-- name: Remember old instances
-  hosts: localhost
-  connection: local
-
-  tasks:
-    - name: Register instances
-      register: ec2_old_instances
-
 - name: Deploy to EC2
   hosts: localhost
   connection: local
