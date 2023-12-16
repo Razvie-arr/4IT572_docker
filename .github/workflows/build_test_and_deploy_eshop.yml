@@ -122,3 +122,4 @@ jobs:
         with:
           playbook: ec2_deploy.yml
           key: ${{ secrets.PRIVATE_KEY }}
+          vault_password: ${{ secrets.VAULT_PASSWORD }}
