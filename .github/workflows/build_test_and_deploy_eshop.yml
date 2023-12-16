@@ -122,4 +122,5 @@ jobs:
       - name: Deploy to AWS
         run: |
           echo "${{ secrets.PRIVATE_KEY }}" > devops_vse.pem
+          chmod 400 devops_vse.pem
           ansible-playbook ec2_deploy.yml --vault-password-file=<(echo "${{ secrets.VAULT_PASSWORD }}") --user ec2-user --key-file devops_vse.pem
