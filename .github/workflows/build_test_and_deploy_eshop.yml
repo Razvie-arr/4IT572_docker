@@ -110,6 +110,8 @@ jobs:
       - name: Setup Ansible
         run: |
           pip3 install ansible boto boto3
+          mkdir /etc/ansible
+          echo "host_key_checking = False" | sudo tee /etc/ansible/ansible.cfg
 
       - name: Setup Ansible-Vault
         run: |
