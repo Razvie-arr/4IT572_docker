@@ -80,7 +80,13 @@
     - name: Gather information about all EC2 instances
       ec2_instance:
         region: us-east-1
+        aws_access_key: "{{ access_key }}"
+        aws_secret_key: "{{ secret_key }}"
+        security_token: "{{ session_token }}"
+        wait: yes
+        vpc_subnet_id: subnet-06ed75bba79b8ee4f
       register: all_ec2_instances
+
 
     - name: Terminate instances that were previously launched
       ec2_instance:
@@ -89,5 +95,3 @@
         state: absent
         wait: yes
         vpc_subnet_id: subnet-06ed75bba79b8ee4f
-        network:
-          assign_public_ip: yes
